@@ -1,10 +1,12 @@
 
 import os
 import streamlit as st
+#from dotenv import load_dotenv
 from supabase import create_client, Client
 from google import genai
 
 #Loading API Keys 
+#load_dotenv()
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 LLM_API_KEY = os.environ.get("LLM_API_KEY")
@@ -43,8 +45,15 @@ def generate_sql_with_gemini(user_prompt: str) -> str:
     7. Provisional_votes
     8. Total_votes
     9. Election_Year
-    - Wrap the table name "NC_Pres_Results" and all column names in double quotes to prevent PostgreSQL case-sensitivity errors.
-    - There is no information related to voter characteristics (age, race, gender, income) listed in the table.
+    - Always return the SQL query beautifully formatted with clean line breaks and indentation.
+    - Place major clauses (SELECT, FROM, WHERE, HAVING, GROUP BY, ORDER BY) on their own separate lines.
+    - Wrap the table name "NC_Pres_Results" and all column names in double quotes to prevent PostgreSQL case-sensitivity errors. Also ensure that no SQL query executes with a semicolon at the end ';'. 
+    - "Candidate_Party" only has the first three letters of the party abbreviation in capital letters, Democrats are stored as "DEM"; Republicans are stored as "REP"; Independents are stored as "IND".
+    - Use ILIKE for string comparisons. Apply wildcards (%) deliberately based on the input context:
+     * Use a single leading wildcard ('%Name') if searching for a specific last name.
+     * Use standard wrapping ('%Name%') ONLY when matching a broad substring.
+     * Avoid trailing wildcards if they risk capturing unwanted variations or null results from structural formatting.    
+     - There is no information related to voter characteristics (age, race, gender, income) listed in the table.
     - If a user asks a question that can't be derived from the table, do not generate SQL queries. Instead, start your response with the exact word 'REFUSAL:' and then explain why, listing the columns of the table in the output so that they can reframe their question. 
     - If it is valid, return ONLY the raw SQL query executable in PostgreSQL. Do not include markdown code blocks, backticks, or the word 'sql'.
     User Question: {user_prompt}
@@ -62,10 +71,17 @@ def generate_sql_with_gemini(user_prompt: str) -> str:
 # ==========================================
 # 3. STREAMLIT FRONT-END UI
 # ==========================================
-st.set_page_config(page_title="NC Presidential Election Results - Text to SQL", layout="centered")
-
-st.title("NC Presidential Election Results Explorer (2016 - 2024)")
-st.subheader("Transform your question into a SQL query with Gemini.")
+st.set_page_config(page_title="NC Presidential Election Results - Text to SQL", layout="wide")
+st.title("NC Presidential Election Results Explorer")
+st.divider()
+st.subheader("Use text to SQL to transform your question into a SQL query.")
+with st.expander ("**About the Data & How to Use**"):
+    st.write("""
+    - Data is from the North Carolina State Board of Elections for Presidential elections between 2016 - 2024. 
+    - Underlying data is maintained at the County-Candidate level. 
+    - Data about voters including race, political affiliation, or income is not included in this product.
+    - This product is meant to allow users to analyze historical trends, at a county level, related to voter turnout methods or counts. Accordingly, this product may not work if you're prompting questions related to comparisons across elections or predictions.       
+    - Feel free to prompt in your desired language!""")
 
 user_prompt = st.text_input(
     "Enter your question:", 
