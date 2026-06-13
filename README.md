@@ -1,4 +1,5 @@
-# Text-to-SQL Product: NC Presidential Election Results Explorer 
+# Text-to-SQL Product: NC Presidential Election Results Explorer  
+Access the App here: https://nc-pres.streamlit.app
 
 A generative AI data product empowering non-technical stakeholders to interactively query historical NC presidential election results. 
 ---
